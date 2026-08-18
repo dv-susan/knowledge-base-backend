@@ -1,0 +1,171 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: kb-gateway
+  main:
+    web-application-type: reactive
+  config:
+    import: optional:nacos:kb-gateway-dev.yaml
+  cloud:
+    nacos:
+      config:
+        namespace: knowledge
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        group: KNOWLEDGE_BASE
+        enabled: true
+        username: nacos
+        password: 123456
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: knowledge
+        group: ${COMPUTER_ID:${USER:default}}
+        username: nacos
+        password: 123456
+        ip: 127.0.0.1
+        metadata:
+          developer: ${COMPUTER_ID:${USER:unknown}}
+    # Gateway配置
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # HTTP超时配置
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 120s
+        pool:
+          max-connections: 500
+          max-idle-time: 30s
+          max-life-time: 60s
+          acquire-timeout: 120000
+
+      # 全局CORS配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      # 路由配置
+      routes:
+        # 用户认证服务路由
+        - id: kb-user-auth
+          uri: lb://kb-user-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+
+        # 文档服务路由
+        - id: kb-document
+          uri: lb://kb-document
+          predicates:
+            - Path=/api/document/**
+          filters:
+            - StripPrefix=2
+
+        # 文件服务路由
+        - id: kb-file
+          uri: lb://kb-file
+          predicates:
+            - Path=/api/file/**
+          filters:
+            - StripPrefix=2
+
+        # AI服务路由
+        - id: kb-ai
+          uri: lb://kb-ai
+          predicates:
+            - Path=/api/ai/**
+          filters:
+            - StripPrefix=2
+
+        # 知识图谱服务路由
+        - id: kb-graph
+          uri: lb://kb-graph
+          predicates:
+            - Path=/api/graph/**
+          filters:
+            - StripPrefix=2
+
+        # 搜索服务路由
+        - id: kb-search
+          uri: lb://kb-search
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - StripPrefix=2
+
+        # 统计分析服务路由
+        - id: kb-statistics
+          uri: lb://kb-statistics
+          predicates:
+            - Path=/api/statistics/**
+          filters:
+            - StripPrefix=2
+
+        # 基础服务路由（通知、配置、日志、字典）
+        - id: kb-foundation
+          uri: lb://kb-foundation
+          predicates:
+            - Path=/api/notifications/**, /api/config/**, /api/logs/**, /api/dicts/**
+          filters:
+            - StripPrefix=1
+
+        # WebSocket 路由（直连 kb-foundation 的 STOMP 端点）
+        - id: kb-foundation-ws
+          uri: lb:ws://kb-foundation
+          predicates:
+            - Path=/ws/**
+
+  # Redis配置（用于网关限流和缓存）
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      database: 2
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: 3000ms
+          max-idle: 10
+          min-idle: 5
+          time-between-eviction-runs: 30s
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.knowledge.base: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# 网关配置
+gateway:
+  # 白名单（不需要认证的路径）
+  white-list:
+    - /api/auth/auth/login
+    - /api/auth/auth/register
+    - /api/auth/auth/refresh
+    - /api/document/share/**
+    - /api/files/**
+    - /api/ai/**
+    - /api/config/public
+    - /api/notifications/templates
+    - /ws/**
+    - /doc.html
+    - /swagger-resources
+    - /v3/api-docs

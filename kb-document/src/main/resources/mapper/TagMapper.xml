@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.TagMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.Tag">
+        <id column="id" property="id" />
+        <result column="tag_name" property="tagName" />
+        <result column="tag_code" property="tagCode" />
+        <result column="category_id" property="categoryId" />
+        <result column="tag_type" property="tagType" />
+        <result column="color" property="color" />
+        <result column="icon" property="icon" />
+        <result column="doc_count" property="docCount" />
+        <result column="status" property="status" />
+        <result column="deleted" property="deleted" />
+        <result column="version" property="version" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, tag_name, tag_code, category_id, tag_type, color, icon, doc_count, status,
+        deleted, version, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <!-- 根据分类ID查询标签列表 -->
+    <select id="selectByCategoryId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE category_id = #{categoryId}
+        AND deleted = 0
+        ORDER BY doc_count DESC
+    </select>
+
+    <!-- 根据标签编码查询标签 -->
+    <select id="selectByTagCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE tag_code = #{tagCode}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据标签类型查询标签列表 -->
+    <select id="selectByTagType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE tag_type = #{tagType}
+        AND deleted = 0
+        ORDER BY doc_count DESC
+    </select>
+
+    <!-- 根据状态查询标签列表 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE status = #{status}
+        AND deleted = 0
+        ORDER BY doc_count DESC
+    </select>
+
+    <!-- 查询热门标签 -->
+    <select id="selectHotTags" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE status = 1
+        AND deleted = 0
+        ORDER BY doc_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 更新文档数量 -->
+    <update id="updateDocumentCount">
+        UPDATE tb_tag
+        SET doc_count = #{count}
+        WHERE id = #{tagId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加文档数量 -->
+    <update id="incrementDocumentCount">
+        UPDATE tb_tag
+        SET doc_count = doc_count + 1
+        WHERE id = #{tagId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少文档数量 -->
+    <update id="decrementDocumentCount">
+        UPDATE tb_tag
+        SET doc_count = GREATEST(doc_count - 1, 0)
+        WHERE id = #{tagId}
+        AND deleted = 0
+    </update>
+
+    <!-- 检查标签编码是否存在 -->
+    <select id="checkTagCodeExists" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM tb_tag
+        WHERE tag_code = #{tagCode}
+        AND deleted = 0
+        <if test="id != null">
+            AND id != #{id}
+        </if>
+    </select>
+
+    <!-- 模糊搜索标签 -->
+    <select id="searchByName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_tag
+        WHERE tag_name LIKE CONCAT('%', #{keyword}, '%')
+        AND status = 1
+        AND deleted = 0
+        ORDER BY doc_count DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.statistics.mapper.DocumentStatisticsAggMapper">
+
+    <!-- 按日期汇总文档浏览量 -->
+    <select id="countDailyViews" resultType="com.knowledge.base.statistics.model.DailyCount">
+        SELECT
+            stat_date AS date,
+            COALESCE(SUM(view_count), 0) AS count
+        FROM kb_document_statistics
+        WHERE stat_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY stat_date
+        ORDER BY stat_date ASC
+    </select>
+
+    <!-- 查询指定时间范围内浏览量最高的文档 -->
+    <select id="selectTopDocumentsByViews" resultType="java.util.HashMap">
+        SELECT
+            s.document_id AS document_id,
+            MAX(s.document_title) AS document_title,
+            COALESCE(SUM(s.view_count), 0) AS total_views,
+            COALESCE(SUM(s.like_count), 0) AS total_likes,
+            COALESCE(SUM(s.comment_count), 0) AS total_comments
+        FROM kb_document_statistics s
+        WHERE s.stat_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY s.document_id
+        ORDER BY total_views DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

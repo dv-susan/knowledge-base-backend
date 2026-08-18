@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.userauth.mapper.RoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.userauth.entity.Role">
+        <id column="id" property="id" />
+        <result column="role_name" property="roleName" />
+        <result column="role_code" property="roleCode" />
+        <result column="description" property="description" />
+        <result column="sort" property="sort" />
+        <result column="status" property="status" />
+        <result column="remark" property="remark" />
+        <result column="deleted" property="deleted" />
+        <result column="version" property="version" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, role_name, role_code, description, sort, status, remark,
+        deleted, version, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <!-- 根据角色编码查询角色 -->
+    <select id="selectByRoleCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_role
+        WHERE role_code = #{roleCode}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据状态查询角色列表 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_role
+        WHERE status = #{status}
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 根据用户ID查询角色列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT DISTINCT r.*
+        FROM kb_role r
+        INNER JOIN kb_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND r.deleted = 0
+        ORDER BY r.sort ASC
+    </select>
+
+    <!-- 根据权限ID查询角色列表 -->
+    <select id="selectByPermissionId" resultMap="BaseResultMap">
+        SELECT DISTINCT r.*
+        FROM kb_role r
+        INNER JOIN kb_role_permission rp ON r.id = rp.role_id
+        WHERE rp.permission_id = #{permissionId}
+        AND r.deleted = 0
+        ORDER BY r.sort ASC
+    </select>
+
+    <!-- 查询所有启用的角色 -->
+    <select id="selectAllEnabled" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_role
+        WHERE status = 1
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 检查角色编码是否存在 -->
+    <select id="checkRoleCodeExists" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM kb_role
+        WHERE role_code = #{roleCode}
+        AND deleted = 0
+        <if test="id != null">
+            AND id != #{id}
+        </if>
+    </select>
+
+    <!-- 根据角色ID查询权限ID列表 -->
+    <select id="selectPermissionIdsByRoleId" resultType="java.lang.Long">
+        SELECT permission_id
+        FROM kb_role_permission
+        WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 根据用户ID查询权限ID列表 -->
+    <select id="selectPermissionIdsByUserId" resultType="java.lang.Long">
+        SELECT DISTINCT rp.permission_id
+        FROM kb_role_permission rp
+        INNER JOIN kb_user_role ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+    </select>
+
+    <!-- 统计角色数量 -->
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_role
+        WHERE deleted = 0
+    </select>
+
+    <!-- 统计启用角色数量 -->
+    <select id="countEnabled" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_role
+        WHERE status = 1
+        AND deleted = 0
+    </select>
+
+    <!-- 根据用户ID查询角色编码列表 -->
+    <select id="selectRoleCodesByUserId" resultType="java.lang.String">
+        SELECT r.role_code
+        FROM kb_role r
+        INNER JOIN kb_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND r.deleted = 0
+    </select>
+
+    <!-- 根据角色编码查询用户ID列表 -->
+    <select id="selectUserIdsByRoleCode" resultType="java.lang.Long">
+        SELECT DISTINCT ur.user_id
+        FROM kb_user_role ur
+        INNER JOIN kb_role r ON ur.role_id = r.id
+        WHERE r.role_code = #{roleCode}
+        AND r.deleted = 0
+    </select>
+
+</mapper>

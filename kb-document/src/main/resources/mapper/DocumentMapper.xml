@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.DocumentMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.Document">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="summary" property="summary" />
+        <result column="content" property="content" />
+        <result column="document_type" property="documentType" />
+        <result column="file_path" property="filePath" />
+        <result column="file_size" property="fileSize" />
+        <result column="file_extension" property="fileExtension" />
+        <result column="mime_type" property="mimeType" />
+        <result column="category_id" property="categoryId" />
+        <result column="team_id" property="teamId" />
+        <result column="tags" property="tags" />
+        <result column="status" property="status" />
+        <result column="is_top" property="isTop" />
+        <result column="is_recommend" property="isRecommend" />
+        <result column="view_count" property="viewCount" />
+        <result column="like_count" property="likeCount" />
+        <result column="favorite_count" property="favoriteCount" />
+        <result column="comment_count" property="commentCount" />
+        <result column="publish_time" property="publishTime" />
+        <result column="author_id" property="authorId" />
+        <result column="author_name" property="authorName" />
+        <result column="cover_image" property="coverImage" />
+        <result column="source" property="source" />
+        <result column="source_url" property="sourceUrl" />
+        <result column="allow_comment" property="allowComment" />
+        <result column="sort" property="sort" />
+        <result column="remark" property="remark" />
+        <result column="deleted" property="deleted" />
+        <result column="version" property="version" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, summary, content, document_type, file_path, file_size, file_extension, mime_type,
+        category_id, team_id, tags, status, is_top, is_recommend, view_count, like_count, favorite_count,
+        comment_count, publish_time, author_id, author_name, cover_image, source, source_url,
+        allow_comment, sort, remark, deleted, version, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <!-- 增加浏览次数 -->
+    <update id="incrementViewCount">
+        UPDATE kb_document
+        SET view_count = view_count + 1
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加点赞次数 -->
+    <update id="incrementLikeCount">
+        UPDATE kb_document
+        SET like_count = like_count + 1
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少点赞次数 -->
+    <update id="decrementLikeCount">
+        UPDATE kb_document
+        SET like_count = GREATEST(like_count - 1, 0)
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加收藏次数 -->
+    <update id="incrementFavoriteCount">
+        UPDATE kb_document
+        SET favorite_count = favorite_count + 1
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少收藏次数 -->
+    <update id="decrementFavoriteCount">
+        UPDATE kb_document
+        SET favorite_count = GREATEST(favorite_count - 1, 0)
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加评论次数 -->
+    <update id="incrementCommentCount">
+        UPDATE kb_document
+        SET comment_count = comment_count + 1
+        WHERE id = #{documentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 按分类统计文档数量 -->
+    <select id="countByCategory" resultType="com.knowledge.base.document.dto.CategoryDocCountDTO">
+        SELECT category_id AS categoryId, COUNT(*) AS count
+        FROM kb_document
+        WHERE deleted = 0
+        GROUP BY category_id
+    </select>
+
+    <!-- 查询文档的上一篇（默认排序：置顶 DESC, 排序 DESC, 发布时间 DESC） -->
+    <select id="selectPrev" resultType="com.knowledge.base.document.vo.DocumentNeighborVO">
+        SELECT id AS prevId, title AS prevTitle
+        FROM kb_document
+        WHERE (is_top, sort, publish_time) &gt; (#{isTop}, #{sort}, #{publishTime})
+          AND deleted = 0
+        ORDER BY is_top ASC, sort ASC, publish_time ASC
+        LIMIT 1
+    </select>
+
+    <!-- 查询文档的下一篇（默认排序：置顶 DESC, 排序 DESC, 发布时间 DESC） -->
+    <select id="selectNext" resultType="com.knowledge.base.document.vo.DocumentNeighborVO">
+        SELECT id AS nextId, title AS nextTitle
+        FROM kb_document
+        WHERE (is_top, sort, publish_time) &lt; (#{isTop}, #{sort}, #{publishTime})
+          AND deleted = 0
+        ORDER BY is_top DESC, sort DESC, publish_time DESC
+        LIMIT 1
+    </select>
+
+</mapper>

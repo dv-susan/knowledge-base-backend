@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.CommentMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.Comment">
+        <id column="id" property="id" />
+        <result column="document_id" property="documentId" />
+        <result column="parent_id" property="parentId" />
+        <result column="root_id" property="rootId" />
+        <result column="content" property="content" />
+        <result column="commenter_id" property="commenterId" />
+        <result column="commenter_name" property="commenterName" />
+        <result column="commenter_avatar" property="commenterAvatar" />
+        <result column="reply_to_user_id" property="replyToUserId" />
+        <result column="reply_to_user_name" property="replyToUserName" />
+        <result column="status" property="status" />
+        <result column="like_count" property="likeCount" />
+        <result column="reply_count" property="replyCount" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="deleted" property="deleted" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, document_id, parent_id, root_id, content, commenter_id, commenter_name, commenter_avatar,
+        reply_to_user_id, reply_to_user_name, status, like_count, reply_count, created_at, updated_at,
+        deleted, create_by, update_by
+    </sql>
+
+    <!-- 根据文档ID查询评论列表 -->
+    <select id="selectByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_comment
+        WHERE document_id = #{documentId}
+        AND parent_id IS NULL
+        AND status = 1
+        AND deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据父评论ID查询回复列表 -->
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_comment
+        WHERE parent_id = #{parentId}
+        AND status = 1
+        AND deleted = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 根据评论者ID查询评论列表 -->
+    <select id="selectByCommenterId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_comment
+        WHERE commenter_id = #{commenterId}
+        AND deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 增加点赞数 -->
+    <update id="incrementLikeCount">
+        UPDATE tb_comment
+        SET like_count = like_count + 1
+        WHERE id = #{commentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少点赞数 -->
+    <update id="decrementLikeCount">
+        UPDATE tb_comment
+        SET like_count = GREATEST(like_count - 1, 0)
+        WHERE id = #{commentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加回复数 -->
+    <update id="incrementReplyCount">
+        UPDATE tb_comment
+        SET reply_count = reply_count + 1
+        WHERE id = #{commentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 更新评论状态 -->
+    <update id="updateStatus">
+        UPDATE tb_comment
+        SET status = #{status}
+        WHERE id = #{commentId}
+        AND deleted = 0
+    </update>
+
+    <!-- 统计文档的评论数量 -->
+    <select id="countByDocumentId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM tb_comment
+        WHERE document_id = #{documentId}
+        AND status = 1
+        AND deleted = 0
+    </select>
+
+</mapper>

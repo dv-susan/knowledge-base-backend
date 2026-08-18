@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.ai.mapper.AiFeedbackMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.ai.entity.AiFeedback">
+        <id column="id" property="id" />
+        <result column="conversation_id" property="conversationId" />
+        <result column="message_id" property="messageId" />
+        <result column="user_id" property="userId" />
+        <result column="feedback_type" property="feedbackType" />
+        <result column="feedback_content" property="feedbackContent" />
+        <result column="rating" property="rating" />
+        <result column="created_at" property="createdAt" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, conversation_id, message_id, user_id, feedback_type, feedback_content, rating, created_at, deleted
+    </sql>
+
+    <!-- 根据对话ID查询反馈列表 -->
+    <select id="selectByConversationId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM ai_feedback
+        WHERE conversation_id = #{conversationId}
+        AND deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据消息ID查询反馈 -->
+    <select id="selectByMessageId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM ai_feedback
+        WHERE message_id = #{messageId}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据用户ID查询反馈列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM ai_feedback
+        WHERE user_id = #{userId}
+        AND deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 统计对话的正面反馈数量 -->
+    <select id="countPositiveFeedback" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ai_feedback
+        WHERE conversation_id = #{conversationId}
+        AND feedback_type = 'positive'
+        AND deleted = 0
+    </select>
+
+    <!-- 统计对话的负面反馈数量 -->
+    <select id="countNegativeFeedback" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ai_feedback
+        WHERE conversation_id = #{conversationId}
+        AND feedback_type = 'negative'
+        AND deleted = 0
+    </select>
+
+    <!-- 计算对话的平均评分 -->
+    <select id="getAverageRating" resultType="java.lang.Double">
+        SELECT AVG(rating)
+        FROM ai_feedback
+        WHERE conversation_id = #{conversationId}
+        AND rating IS NOT NULL
+        AND deleted = 0
+    </select>
+
+</mapper>

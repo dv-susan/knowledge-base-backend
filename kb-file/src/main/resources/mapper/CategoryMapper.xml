@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.file.mapper.CategoryMapper">
+
+    <resultMap id="BaseResultMap" type="com.knowledge.base.file.entity.Category">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="parent_id" property="parentId" />
+        <result column="level" property="level" />
+        <result column="sort_order" property="sortOrder" />
+        <result column="icon" property="icon" />
+        <result column="description" property="description" />
+        <result column="status" property="status" />
+        <result column="deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, parent_id, level, sort_order, icon, description, status, deleted, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <select id="selectByParentId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_category
+        WHERE parent_id = #{parentId}
+          AND deleted = 0
+        ORDER BY sort_order ASC
+    </select>
+
+    <select id="selectAllEnabled" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM tb_category
+        WHERE status = 1
+          AND deleted = 0
+        ORDER BY parent_id ASC, sort_order ASC
+    </select>
+
+    <select id="selectChildIds" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT id
+        FROM tb_category
+        WHERE parent_id = #{parentId}
+          AND deleted = 0
+    </select>
+
+</mapper>

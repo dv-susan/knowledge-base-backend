@@ -1,0 +1,68 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: kb-graph
+  profiles:
+    active: dev
+
+  # Nacos 服务注册与发现
+  cloud:
+    nacos:
+      config:
+        namespace: knowledge
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        group: KNOWLEDGE_BASE
+        enabled: true
+        username: nacos
+        password: 123456
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: knowledge
+        group: ${COMPUTER_ID:${USER:default}}
+        username: nacos
+        password: 123456
+        ip: 127.0.0.1
+  config:
+    import: optional:nacos:kb-graph-dev.yaml
+
+  # Neo4j配置（KAG知识图谱）
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:123456}
+
+  # Redis配置
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      database: 2
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: 3000ms
+          max-idle: 10
+          min-idle: 5
+          time-between-eviction-runs: 30s
+
+# Knife4j配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+  production: false
+
+# 日志配置
+logging:
+  level:
+    com.knowledge.base: debug
+    org.springframework: info
+    org.neo4j: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"

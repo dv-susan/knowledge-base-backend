@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.DocumentVersionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.DocumentVersion">
+        <id column="id" property="id" />
+        <result column="document_id" property="documentId" />
+        <result column="version" property="version" />
+        <result column="title" property="title" />
+        <result column="content" property="content" />
+        <result column="summary" property="summary" />
+        <result column="change_description" property="changeDescription" />
+        <result column="change_size" property="changeSize" />
+        <result column="operator_id" property="operatorId" />
+        <result column="operator_name" property="operatorName" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, document_id, version, title, content, summary, change_description, change_size,
+        operator_id, operator_name, created_at
+    </sql>
+
+    <!-- 根据文档ID查询版本列表 -->
+    <select id="selectByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+        ORDER BY version DESC
+    </select>
+
+    <!-- 根据文档ID和版本号查询版本 -->
+    <select id="selectByDocumentIdAndVersion" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+        AND version = #{version}
+        LIMIT 1
+    </select>
+
+    <!-- 查询文档的最新版本 -->
+    <select id="selectLatestByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+        ORDER BY version DESC
+        LIMIT 1
+    </select>
+
+    <!-- 查询文档的第一个版本 -->
+    <select id="selectFirstByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+        ORDER BY version ASC
+        LIMIT 1
+    </select>
+
+    <!-- 获取文档的下一个版本号 -->
+    <select id="getNextVersionNumber" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(version), 0) + 1
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+    </select>
+
+    <!-- 统计文档的版本数量 -->
+    <select id="countByDocumentId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+    </select>
+
+    <!-- 根据操作人ID查询版本列表 -->
+    <select id="selectByOperatorId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE operator_id = #{operatorId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 比较两个版本 -->
+    <select id="compareVersions" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_version
+        WHERE document_id = #{documentId}
+        AND version IN (#{version1}, #{version2})
+        ORDER BY version ASC
+    </select>
+
+</mapper>

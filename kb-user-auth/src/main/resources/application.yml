@@ -1,0 +1,177 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: kb-user-auth
+  # Nacos 服务注册与发现
+  cloud:
+    nacos:
+      config:
+        namespace: knowledge
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        group: KNOWLEDGE_BASE
+        enabled: true
+        username: nacos
+        password: 123456
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: knowledge
+        group: ${COMPUTER_ID:${USER:default}}
+        username: nacos
+        password: 123456
+        ip: 127.0.0.1
+  config:
+    import: optional:nacos:kb-auth-api-dev.yaml
+
+  # 数据源配置
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/kb_user?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: false
+        login-username: admin
+        login-password: admin
+
+  # Redis配置
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      database: 2
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: 3000ms
+          max-idle: 10
+          min-idle: 5
+          time-between-eviction-runs: 30s
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1800000
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+  # 邮件配置（163邮箱）
+  mail:
+    host: ${MAIL_HOST:smtp.163.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+          starttls:
+            enable: false
+            required: false
+          connection-timeout: 10000
+          timeout: 10000
+          write-timeout: 10000
+
+# MyBatis Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.knowledge.base.userauth.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: input
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.knowledge.base: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+
+# 应用配置
+app:
+  # 前端地址（用于生成激活链接）
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:3002}
+  # 激活链接有效期（小时）
+  activation-token-expiry-hours: 24
+
+# JWT配置
+jwt:
+  secret: knowledge-base-secret-key-for-jwt-token-generation-must-be-long-enough
+  expiration: 7200
+  refresh-expiration: 604800
+  header: Authorization
+  prefix: Bearer
+  issuer: knowledge-base
+
+# JWT安全配置
+security:
+  jwt:
+    exclude-paths: >
+      /auth/login,
+      /auth/login/**,
+      /auth/register,
+      /auth/verify-email,
+      /auth/verify-email/**,
+      /auth/password/**,
+      /auth/validate,
+      /auth/users/by-role,
+      /auth/reviewer-ids,
+      /auth/test,
+      /auth/test-error,
+      /teams/tree,
+      /teams/tree/**,
+      /public/**,
+      /actuator/**,
+      /doc.html,
+      /swagger-resources/**,
+      /v3/api-docs/**,
+      /webjars/**,
+      /favicon.ico
+
+# Swagger配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+  production: false

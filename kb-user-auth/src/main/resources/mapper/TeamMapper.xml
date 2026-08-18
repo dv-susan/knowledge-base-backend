@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.userauth.mapper.TeamMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.userauth.entity.Team">
+        <id column="id" property="id" />
+        <result column="team_name" property="teamName" />
+        <result column="team_code" property="teamCode" />
+        <result column="description" property="description" />
+        <result column="parent_id" property="parentId" />
+        <result column="level" property="level" />
+        <result column="path" property="path" />
+        <result column="member_count" property="memberCount" />
+        <result column="doc_count" property="docCount" />
+        <result column="leader_id" property="leaderId" />
+        <result column="status" property="status" />
+        <result column="deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, team_name, team_code, description, parent_id, level, path, member_count, doc_count, leader_id, status,
+        deleted, created_at, updated_at, create_by, update_by
+    </sql>
+
+    <!-- 根据父团队ID查询子团队列表 -->
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE parent_id = #{parentId}
+        AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据团队编码查询团队 -->
+    <select id="selectByTeamCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE team_code = #{teamCode}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据状态查询团队列表 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE status = #{status}
+        AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据层级查询团队列表 -->
+    <select id="selectByLevel" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE level = #{level}
+        AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- 查询所有根团队 -->
+    <select id="selectRootTeams" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE parent_id = 0
+        AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据负责人ID查询团队列表 -->
+    <select id="selectByLeaderId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE leader_id = #{leaderId}
+        AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据路径前缀查询团队列表（查询所有子团队） -->
+    <select id="selectByPathPrefix" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE path LIKE CONCAT(#{path}, '%')
+        AND deleted = 0
+        ORDER BY level ASC, id ASC
+    </select>
+
+    <!-- 查询团队树 -->
+    <select id="selectTeamTree" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_team
+        WHERE deleted = 0
+        ORDER BY level ASC, id ASC
+    </select>
+
+    <!-- 更新成员数量 -->
+    <update id="updateMemberCount">
+        UPDATE kb_team
+        SET member_count = #{count}
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加成员数量 -->
+    <update id="incrementMemberCount">
+        UPDATE kb_team
+        SET member_count = member_count + 1
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少成员数量 -->
+    <update id="decrementMemberCount">
+        UPDATE kb_team
+        SET member_count = GREATEST(member_count - 1, 0)
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 更新文档数量 -->
+    <update id="updateDocumentCount">
+        UPDATE kb_team
+        SET doc_count = #{count}
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 增加文档数量 -->
+    <update id="incrementDocumentCount">
+        UPDATE kb_team
+        SET doc_count = doc_count + 1
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 减少文档数量 -->
+    <update id="decrementDocumentCount">
+        UPDATE kb_team
+        SET doc_count = GREATEST(doc_count - 1, 0)
+        WHERE id = #{teamId}
+        AND deleted = 0
+    </update>
+
+    <!-- 检查团队编码是否存在 -->
+    <select id="checkTeamCodeExists" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM kb_team
+        WHERE team_code = #{teamCode}
+        AND deleted = 0
+        <if test="id != null">
+            AND id != #{id}
+        </if>
+    </select>
+
+    <!-- 统计团队数量 -->
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_team
+        WHERE deleted = 0
+    </select>
+
+    <!-- 统计启用团队数量 -->
+    <select id="countEnabled" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_team
+        WHERE status = 1
+        AND deleted = 0
+    </select>
+
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.statistics.mapper.AiStatisticsMapper">
+
+    <!-- 统计 AI 对话总数（仅统计未删除的） -->
+    <select id="countConversations" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_ai_conversation
+        WHERE deleted = 0
+    </select>
+
+    <!-- 统计 AI 用户提问总数（仅统计 role='user' 且未删除的消息） -->
+    <select id="countUserMessages" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_ai_message
+        WHERE role = 'user'
+          AND deleted = 0
+    </select>
+
+</mapper>

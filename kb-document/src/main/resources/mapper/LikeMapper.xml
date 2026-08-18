@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.LikeMapper">
+
+    <!-- 根据目标ID、用户ID、目标类型删除点赞记录 -->
+    <delete id="deleteByTargetAndUser">
+        DELETE FROM tb_like
+        WHERE target_id = #{targetId}
+        AND user_id = #{userId}
+        AND target_type = #{targetType}
+    </delete>
+
+</mapper>

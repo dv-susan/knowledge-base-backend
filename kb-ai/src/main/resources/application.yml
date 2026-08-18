@@ -1,0 +1,192 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: kb-ai
+
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/kb_ai?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+
+  sql:
+    init:
+      mode: never
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      database: 2
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: 3000ms
+          max-idle: 10
+          min-idle: 5
+          time-between-eviction-runs: 30s
+
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: admin
+    password: 123456
+    listener:
+      simple:
+        acknowledge-mode: manual
+
+  # Nacos 服务注册与发现
+  cloud:
+    nacos:
+      config:
+        namespace: knowledge
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        group: KNOWLEDGE_BASE
+        enabled: true
+        username: nacos
+        password: 123456
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: knowledge
+        group: ${COMPUTER_ID:${USER:default}}
+        username: nacos
+        password: 123456
+        ip: 127.0.0.1
+  config:
+    import: optional:nacos:kb-ai-dev.yaml
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://127.0.0.1:9200}
+    username: elastic
+    password: 123456
+    connection-timeout: 10s
+    socket-timeout: 30s
+
+  # Neo4j配置（KAG知识图谱）
+  neo4j:
+    uri: ${NEO4J_URI:bolt://localhost:7687}
+    authentication:
+      username: ${NEO4J_USERNAME:neo4j}
+      password: ${NEO4J_PASSWORD:123456}
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.knowledge.base.ai.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Qwen配置（使用OpenAI兼容接口）
+qwen:
+  api-key: ${QWEN_API_KEY:}
+  base-url: ${QWEN_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+  chat:
+    options:
+      model: ${QWEN_MODEL:qwen3-max}
+      temperature: 0.3
+      max-tokens: 4000
+
+# DeepSeek配置
+deepseek:
+  api-key: ${DEEPSEEK_API_KEY:}
+  model: deepseek-chat
+  base-url: https://api.deepseek.com/v1
+  max-tokens: 4096
+  temperature: 0.7
+
+# kb-document 服务直连地址（本地开发时使用）
+kb-document:
+  url: http://localhost:8082
+
+# kb-graph 服务直连地址（本地开发时使用，图谱重建后清除Redis缓存）
+kb-graph:
+  url: http://localhost:8088
+
+# AI默认配置
+ai:
+  default-model: qwen
+  suggestions:
+    items:
+      - "如何使用企业知识库？"
+      - "查找关于技术文档的内容"
+      - "帮我总结最近的文档"
+      - "分析文档趋势"
+
+# ==================== RAG配置 ====================
+rag:
+  enabled: ${RAG_ENABLED:true}
+  chunking:
+    chunk-size: ${RAG_CHUNK_SIZE:512}
+    chunk-overlap: ${RAG_CHUNK_OVERLAP:64}
+    paragraph-aware: true
+  embedding:
+    model: ${RAG_EMBEDDING_MODEL:text-embedding-v3}
+    dimension: 1024
+    provider: qwen
+    batch-size: 10
+    cache-enabled: true
+    cache-ttl-seconds: 86400
+  retrieval:
+    default-top-k: 5
+    hybrid-top-k: 20
+    final-top-k: 5
+    rrf-c: 60
+  rerank:
+    enabled: true
+    model: qwen
+  index:
+    chunk-index-name: kb_chunk
+  async:
+    enabled: true
+    reindex-batch-size: 10
+
+# ==================== KAG配置（知识图谱增强生成） ====================
+kag:
+  enabled: ${KAG_ENABLED:true}
+  extraction:
+    batch-size: ${KAG_EXTRACTION_BATCH_SIZE:5}
+    max-entities-per-chunk: 10
+    max-relations-per-chunk: 15
+    model: qwen
+    max-retries: 2
+    similarity-threshold: 0.85
+  graph:
+    database: neo4j
+    clear-before-build: true
+    batch-write-size: 50
+  retrieval:
+    max-hops: ${KAG_MAX_HOPS:2}
+    max-entities-per-query: 10
+    max-chunks-per-entity: 3
+    timeout-seconds: 10
+  fusion:
+    rerank-enabled: true
+    rag-weight: 0.5
+    kag-weight: 0.5
+  async:
+    enabled: true
+    build-batch-size: 5
+    max-retries: 3
+
+# 日志配置
+logging:
+  level:
+    com.knowledge.base.ai: DEBUG
+    com.baomidou.mybatisplus: DEBUG
+    dev.ai4j.openai4j: TRACE
+    dev.langchain4j: DEBUG
+    okhttp3: DEBUG
+    okhttp3.OkHttpClient: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'

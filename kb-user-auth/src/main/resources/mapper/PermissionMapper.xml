@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.userauth.mapper.PermissionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.userauth.entity.Permission">
+        <id column="id" property="id" />
+        <result column="parent_id" property="parentId" />
+        <result column="permission_name" property="permissionName" />
+        <result column="permission_code" property="permissionCode" />
+        <result column="permission_type" property="permissionType" />
+        <result column="menu_url" property="menuUrl" />
+        <result column="api_url" property="apiUrl" />
+        <result column="method" property="method" />
+        <result column="icon" property="icon" />
+        <result column="sort" property="sort" />
+        <result column="status" property="status" />
+        <result column="deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, parent_id, permission_name, permission_code, permission_type, menu_url, api_url, method, icon, sort, status,
+        deleted, created_at, updated_at
+    </sql>
+
+    <!-- 根据父权限ID查询子权限列表 -->
+    <select id="selectByParentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE parent_id = #{parentId}
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 根据权限编码查询权限 -->
+    <select id="selectByPermissionCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE permission_code = #{permissionCode}
+        AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据权限类型查询权限列表 -->
+    <select id="selectByPermissionType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE permission_type = #{permissionType}
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 根据状态查询权限列表 -->
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE status = #{status}
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 查询所有根权限 -->
+    <select id="selectRootPermissions" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE parent_id = 0
+        AND deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+    <!-- 根据角色ID查询权限列表 -->
+    <select id="selectByRoleId" resultMap="BaseResultMap">
+        SELECT DISTINCT p.*
+        FROM kb_permission p
+        INNER JOIN kb_role_permission rp ON p.id = rp.permission_id
+        WHERE rp.role_id = #{roleId}
+        AND p.deleted = 0
+        ORDER BY p.sort ASC
+    </select>
+
+    <!-- 根据用户ID查询权限列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT DISTINCT p.*
+        FROM kb_permission p
+        INNER JOIN kb_role_permission rp ON p.id = rp.permission_id
+        INNER JOIN kb_user_role ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND p.deleted = 0
+        ORDER BY p.sort ASC
+    </select>
+
+    <!-- 检查权限编码是否存在 -->
+    <select id="checkPermissionCodeExists" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM kb_permission
+        WHERE permission_code = #{permissionCode}
+        AND deleted = 0
+        <if test="id != null">
+            AND id != #{id}
+        </if>
+    </select>
+
+    <!-- 查询权限树 -->
+    <select id="selectPermissionTree" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_permission
+        WHERE deleted = 0
+        ORDER BY sort ASC
+    </select>
+
+</mapper>

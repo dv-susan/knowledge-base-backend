@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.statistics.mapper.DocumentStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.statistics.entity.DocumentStatistics">
+        <id column="id" property="id" />
+        <result column="title" property="title" />
+        <result column="author_id" property="authorId" />
+        <result column="category_id" property="categoryId" />
+        <result column="status" property="status" />
+        <result column="view_count" property="viewCount" />
+        <result column="like_count" property="likeCount" />
+        <result column="favorite_count" property="favoriteCount" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, author_id, category_id, status, view_count, like_count, favorite_count, created_at, updated_at
+    </sql>
+
+    <!-- 统计文档总数 -->
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_document
+        WHERE deleted = 0
+    </select>
+
+    <!-- 根据状态统计文档数量 -->
+    <select id="countByStatus" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_document
+        WHERE status = #{status}
+        AND deleted = 0
+    </select>
+
+    <!-- 根据作者ID统计文档数量 -->
+    <select id="countByAuthorId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_document
+        WHERE author_id = #{authorId}
+        AND deleted = 0
+    </select>
+
+    <!-- 根据分类ID统计文档数量 -->
+    <select id="countByCategoryId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_document
+        WHERE category_id = #{categoryId}
+        AND deleted = 0
+    </select>
+
+    <!-- 统计指定时间范围内的文档数量 -->
+    <select id="countByDateRange" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_document
+        WHERE created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+        AND deleted = 0
+    </select>
+
+    <!-- 统计每日文档创建数量 -->
+    <select id="countDailyDocuments" resultType="com.knowledge.base.statistics.model.DailyCount">
+        SELECT DATE(created_at) AS date, COUNT(*) AS count
+        FROM kb_document
+        WHERE created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+        AND deleted = 0
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+    </select>
+
+    <!-- 统计最热门的文档（按浏览量） -->
+    <select id="selectMostViewedDocuments" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_document
+        WHERE deleted = 0
+        ORDER BY view_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计最受欢迎的文档（按点赞数） -->
+    <select id="selectMostLikedDocuments" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_document
+        WHERE deleted = 0
+        ORDER BY like_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计最多收藏的文档 -->
+    <select id="selectMostFavoritedDocuments" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_document
+        WHERE deleted = 0
+        ORDER BY favorite_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计最活跃的作者 -->
+    <select id="selectTopAuthors" resultType="com.knowledge.base.statistics.model.IdCount">
+        SELECT author_id AS id, COUNT(*) AS count
+        FROM kb_document
+        WHERE deleted = 0
+        GROUP BY author_id
+        ORDER BY count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计各分类的文档数量 -->
+    <select id="countByCategory" resultType="com.knowledge.base.statistics.model.IdCount">
+        SELECT category_id AS id, COUNT(*) AS count
+        FROM kb_document
+        WHERE deleted = 0
+        GROUP BY category_id
+        ORDER BY count DESC
+    </select>
+
+    <!-- 统计总浏览量 -->
+    <select id="sumViewCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(view_count), 0)
+        FROM kb_document
+        WHERE deleted = 0
+    </select>
+
+    <!-- 统计总点赞数 -->
+    <select id="sumLikeCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(like_count), 0)
+        FROM kb_document
+        WHERE deleted = 0
+    </select>
+
+    <!-- 统计总收藏数 -->
+    <select id="sumFavoriteCount" resultType="java.lang.Long">
+        SELECT COALESCE(SUM(favorite_count), 0)
+        FROM kb_document
+        WHERE deleted = 0
+    </select>
+
+</mapper>

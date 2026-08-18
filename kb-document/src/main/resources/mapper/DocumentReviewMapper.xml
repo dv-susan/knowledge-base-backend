@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.DocumentReviewMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.DocumentReview">
+        <id column="id" property="id" />
+        <result column="document_id" property="documentId" />
+        <result column="reviewer_id" property="reviewerId" />
+        <result column="reviewer_name" property="reviewerName" />
+        <result column="review_result" property="reviewResult" />
+        <result column="review_comment" property="reviewComment" />
+        <result column="before_status" property="beforeStatus" />
+        <result column="reviewed_at" property="reviewedAt" />
+        <result column="review_round" property="reviewRound" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, document_id, reviewer_id, reviewer_name, review_result, review_comment, before_status,
+        reviewed_at, review_round, created_at
+    </sql>
+
+    <!-- 根据文档ID查询审核记录列表 -->
+    <select id="selectByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_review
+        WHERE document_id = #{documentId}
+        ORDER BY review_round ASC, created_at DESC
+    </select>
+
+    <!-- 根据审核人ID查询审核记录列表 -->
+    <select id="selectByReviewerId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_review
+        WHERE reviewer_id = #{reviewerId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据文档ID和审核轮次查询审核记录 -->
+    <select id="selectByDocumentIdAndRound" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_review
+        WHERE document_id = #{documentId}
+        AND review_round = #{reviewRound}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询文档的最新审核记录 -->
+    <select id="selectLatestByDocumentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM tb_document_review
+        WHERE document_id = #{documentId}
+        ORDER BY review_round DESC, created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 统计文档的审核轮次 -->
+    <select id="countRoundsByDocumentId" resultType="java.lang.Integer">
+        SELECT COALESCE(MAX(review_round), 0)
+        FROM tb_document_review
+        WHERE document_id = #{documentId}
+    </select>
+
+    <!-- 统计审核人的审核数量 -->
+    <select id="countByReviewerId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM tb_document_review
+        WHERE reviewer_id = #{reviewerId}
+    </select>
+
+    <!-- 查询待审核的文档列表（审核人相关的） -->
+    <select id="selectPendingReviews" resultMap="BaseResultMap">
+        SELECT DISTINCT dr.*
+        FROM tb_document_review dr
+        INNER JOIN kb_document d ON dr.document_id = d.id
+        WHERE d.status = 2
+        AND dr.reviewer_id = #{reviewerId}
+        AND dr.review_result IS NULL
+        ORDER BY dr.created_at ASC
+    </select>
+
+</mapper>

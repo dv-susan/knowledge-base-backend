@@ -1,0 +1,188 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: kb-file
+  profiles:
+    active: dev
+
+  # Nacos 服务注册与发现
+  cloud:
+    nacos:
+      config:
+        namespace: knowledge
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+        group: KNOWLEDGE_BASE
+        enabled: true
+        username: nacos
+        password: 123456
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: knowledge
+        group: ${COMPUTER_ID:${USER:default}}
+        username: nacos
+        password: 123456
+        ip: 127.0.0.1
+  config:
+    import: optional:nacos:kb-file-dev.yaml
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/kb_file?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 30
+      max-wait: 60000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      validation-query: SELECT 1
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      filters: stat,wall
+
+  # Redis配置
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      database: 2
+      timeout: 10000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: 3000ms
+          max-idle: 10
+          min-idle: 5
+          time-between-eviction-runs: 30s
+
+  # RabbitMQ配置（异步转码消息队列）
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: admin
+    password: 123456
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 1
+        max-concurrency: 2
+        acknowledge-mode: auto
+        prefetch: 1
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 20MB
+      # 超过 2MB 的文件写入磁盘临时目录，避免 OOM
+      file-size-threshold: 2MB
+      location: ${java.io.tmpdir}/kb-file-multipart
+
+# MyBatis Plus配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.knowledge.base.file.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 文件存储配置 - 使用 RustFS 分布式文件系统
+file:
+  storage:
+    type: rustfs
+    rustfs:
+      # RustFS 服务端点地址
+      endpoint: 127.0.0.1
+      # 服务端口
+      port: 9091
+      # 访问密钥ID
+      accessKey: 密钥ID
+      # 秘密访问密钥
+      secretKey: 你的访问密钥
+      # 是否使用 HTTPS
+      secure: false
+      # 默认存储桶名称
+      bucketName: knowledge-dev
+      # 连接超时时间（毫秒）
+      connectTimeout: 30000
+      # 读取超时时间（毫秒）
+      readTimeout: 60000
+      # 写入超时时间（毫秒）
+      writeTimeout: 60000
+      # 最大连接数
+      maxConnections: 50
+      # 是否启用 RustFS
+      enabled: true
+    ffmpeg:
+      path: /usr/bin/ffmpeg
+      ffprobe-path: /usr/bin/ffprobe
+      hls-segment-time: 10
+      thumbnail-time: 5
+    upload:
+      max-size: 20971520  # 20MB
+      allowed-types:
+        - pdf
+        - doc
+        - docx
+        - xls
+        - xlsx
+        - ppt
+        - pptx
+        - txt
+        - md
+        - png
+        - jpg
+        - jpeg
+        - gif
+        - bmp
+        - svg
+        - mp4
+        - avi
+        - mov
+        - wmv
+        - mkv
+        - webm
+        - flv
+        - mp3
+        - wav
+        - flac
+        - aac
+        - ogg
+      enable-fast-upload: true
+      calculate-hash: true
+      enable-resumable-upload: true
+    url:
+      prefix: http://localhost:8084/file
+      preview-prefix: http://localhost:8084/file/preview
+
+# Knife4j配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+  production: false
+
+# 日志配置
+logging:
+  level:
+    com.knowledge.base: debug
+    org.springframework: info
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"

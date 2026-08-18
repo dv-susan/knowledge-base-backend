@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.statistics.mapper.UserStatisticsAggMapper">
+
+    <!-- 查询指定时间范围内最活跃的用户（按浏览量） -->
+    <select id="selectTopActiveUsers" resultType="com.knowledge.base.statistics.model.IdCount">
+        SELECT
+            s.user_id AS id,
+            COALESCE(SUM(s.view_count), 0) AS count
+        FROM kb_user_statistics s
+        WHERE s.stat_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY s.user_id
+        ORDER BY count DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

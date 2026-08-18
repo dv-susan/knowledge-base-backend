@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.userauth.mapper.TeamMemberMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.userauth.entity.TeamMember">
+        <id column="id" property="id" />
+        <result column="team_id" property="teamId" />
+        <result column="user_id" property="userId" />
+        <result column="member_role" property="memberRole" />
+        <result column="join_time" property="joinTime" />
+        <result column="create_by" property="createBy" />
+    </resultMap>
+
+    <!-- 根据团队ID查询所有成员 -->
+    <select id="selectByTeamId" resultMap="BaseResultMap">
+        SELECT id, team_id, user_id, member_role, join_time, create_by
+        FROM kb_team_member
+        WHERE team_id = #{teamId}
+        ORDER BY join_time DESC
+    </select>
+
+    <!-- 根据用户ID查询所属团队 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT id, team_id, user_id, member_role, join_time, create_by
+        FROM kb_team_member
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 批量删除团队成员 -->
+    <delete id="deleteByTeamIdAndUserIds">
+        DELETE FROM kb_team_member
+        WHERE team_id = #{teamId}
+        AND user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <!-- 统计团队下的成员数量 -->
+    <select id="countByTeamId" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM kb_team_member WHERE team_id = #{teamId}
+    </select>
+
+</mapper>

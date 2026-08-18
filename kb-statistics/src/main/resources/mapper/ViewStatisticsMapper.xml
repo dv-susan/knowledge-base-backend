@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.statistics.mapper.ViewStatisticsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.statistics.entity.ViewStatistics">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="document_id" property="documentId" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, document_id, created_at
+    </sql>
+
+    <!-- 统计浏览记录总数 -->
+    <select id="countAll" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_view_history
+    </select>
+
+    <!-- 根据用户ID统计浏览数量 -->
+    <select id="countByUserId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_view_history
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据文档ID统计浏览数量 -->
+    <select id="countByDocumentId" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM kb_view_history
+        WHERE document_id = #{documentId}
+    </select>
+
+    <!-- 统计指定时间范围内的浏览数量 -->
+    <select id="countByDateRange" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_view_history
+        WHERE created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+    </select>
+
+    <!-- 统计用户在指定时间范围内的浏览数量 -->
+    <select id="countByUserIdAndDateRange" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_view_history
+        WHERE user_id = #{userId}
+        AND created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+    </select>
+
+    <!-- 统计每日浏览数量 -->
+    <select id="countDailyViews" resultType="com.knowledge.base.statistics.model.DailyCount">
+        SELECT DATE(created_at) AS date, COUNT(*) AS count
+        FROM kb_view_history
+        WHERE created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+    </select>
+
+    <!-- 统计文档在指定时间范围内的浏览数量 -->
+    <select id="countByDocumentIdAndDateRange" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_view_history
+        WHERE document_id = #{documentId}
+        AND created_at &gt;= #{startDate}
+        AND created_at &lt;= #{endDate}
+    </select>
+
+    <!-- 统计最热门的文档（按浏览量） -->
+    <select id="selectMostViewedDocuments" resultType="com.knowledge.base.statistics.model.IdCount">
+        SELECT document_id AS id, COUNT(*) AS count
+        FROM kb_view_history
+        GROUP BY document_id
+        ORDER BY count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计最活跃的浏览用户 -->
+    <select id="selectMostActiveViewers" resultType="com.knowledge.base.statistics.model.IdCount">
+        SELECT user_id AS id, COUNT(*) AS count
+        FROM kb_view_history
+        GROUP BY user_id
+        ORDER BY count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询用户浏览过的文档ID列表 -->
+    <select id="selectViewedDocumentIdsByUserId" resultType="java.lang.Long">
+        SELECT DISTINCT document_id
+        FROM kb_view_history
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 检查用户是否浏览过指定文档 -->
+    <select id="hasViewedDocument" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM kb_view_history
+        WHERE user_id = #{userId}
+        AND document_id = #{documentId}
+    </select>
+
+    <!-- 查询用户最近浏览记录 -->
+    <select id="selectRecentViewsByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_view_history
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计活跃用户数（近30天有浏览记录的不重复用户数） -->
+    <select id="countActiveUsers" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT user_id)
+        FROM kb_view_history
+        WHERE user_id IS NOT NULL
+          AND created_at >= #{sinceDate}
+    </select>
+
+</mapper>

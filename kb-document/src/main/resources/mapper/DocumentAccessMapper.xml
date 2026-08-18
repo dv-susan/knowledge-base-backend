@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.document.mapper.DocumentAccessMapper">
+
+    <resultMap id="BaseResultMap" type="com.knowledge.base.document.entity.DocumentAccess">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="document_id" property="documentId" />
+        <result column="document_title" property="documentTitle" />
+        <result column="category_id" property="categoryId" />
+        <result column="category_name" property="categoryName" />
+        <result column="access_time" property="accessTime" />
+        <result column="ip_address" property="ipAddress" />
+        <result column="user_agent" property="userAgent" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="deleted" property="deleted" />
+        <result column="summary" property="summary" />
+        <result column="author_name" property="authorName" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <delete id="deleteByUserIdAndDocumentId">
+        DELETE FROM kb_document_access
+        WHERE user_id = #{userId} AND document_id = #{documentId}
+    </delete>
+
+    <delete id="deleteAllByUserId">
+        DELETE FROM kb_document_access
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.search.mapper.SearchHistoryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.search.entity.SearchHistory">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="keyword" property="keyword" />
+        <result column="search_count" property="searchCount" />
+        <result column="created_at" property="createdAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, keyword, search_count, created_at
+    </sql>
+
+    <!-- 根据用户ID查询搜索历史列表 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_search_history
+        WHERE user_id = #{userId}
+        ORDER BY search_count DESC, created_at DESC
+    </select>
+
+    <!-- 根据用户ID查询热门搜索关键词 -->
+    <select id="selectHotKeywordsByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_search_history
+        WHERE user_id = #{userId}
+        ORDER BY search_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 根据用户ID和关键词查询 -->
+    <select id="selectByUserIdAndKeyword" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_search_history
+        WHERE user_id = #{userId}
+        AND keyword = #{keyword}
+        LIMIT 1
+    </select>
+
+    <!-- 增加搜索次数 -->
+    <update id="incrementSearchCount">
+        UPDATE kb_search_history
+        SET search_count = search_count + 1
+        WHERE user_id = #{userId}
+        AND keyword = #{keyword}
+    </update>
+
+    <!-- 更新或插入搜索历史 -->
+    <insert id="insertOrUpdate" parameterType="com.knowledge.base.search.entity.SearchHistory">
+        INSERT INTO kb_search_history (user_id, keyword, search_count, created_at)
+        VALUES (#{userId}, #{keyword}, 1, NOW())
+        ON DUPLICATE KEY UPDATE
+        search_count = search_count + 1,
+        created_at = NOW()
+    </insert>
+
+    <!-- 删除搜索历史 -->
+    <delete id="deleteByUserIdAndKeyword">
+        DELETE FROM kb_search_history
+        WHERE user_id = #{userId}
+        AND keyword = #{keyword}
+    </delete>
+
+    <!-- 清空用户搜索历史 -->
+    <delete id="clearByUserId">
+        DELETE FROM kb_search_history
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 统计用户的搜索历史数量 -->
+    <select id="countByUserId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM kb_search_history
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据关键词模糊搜索 -->
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM kb_search_history
+        WHERE user_id = #{userId}
+        AND keyword LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY search_count DESC, created_at DESC
+    </select>
+
+</mapper>

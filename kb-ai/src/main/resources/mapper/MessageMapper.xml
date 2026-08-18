@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.knowledge.base.ai.mapper.MessageMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.knowledge.base.ai.entity.Message">
+        <id column="id" property="id" />
+        <result column="conversation_id" property="conversationId" />
+        <result column="role" property="role" />
+        <result column="content" property="content" />
+        <result column="tokens" property="tokens" />
+        <result column="created_at" property="createdAt" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, conversation_id, role, content, tokens, created_at, deleted
+    </sql>
+
+    <!-- 根据对话ID查询消息列表 -->
+    <select id="selectByConversationId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM message
+        WHERE conversation_id = #{conversationId}
+        AND deleted = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 根据对话ID和角色查询消息列表 -->
+    <select id="selectByConversationIdAndRole" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM message
+        WHERE conversation_id = #{conversationId}
+        AND role = #{role}
+        AND deleted = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 统计对话的消息数量 -->
+    <select id="countByConversationId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM message
+        WHERE conversation_id = #{conversationId}
+        AND deleted = 0
+    </select>
+
+    <!-- 统计对话的总token数量 -->
+    <select id="sumTokensByConversationId" resultType="java.lang.Integer">
+        SELECT COALESCE(SUM(tokens), 0)
+        FROM message
+        WHERE conversation_id = #{conversationId}
+        AND deleted = 0
+    </select>
+
+    <!-- 查询对话的最后一条消息 -->
+    <select id="selectLastMessageByConversationId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM message
+        WHERE conversation_id = #{conversationId}
+        AND deleted = 0
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 批量插入消息 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO message (conversation_id, role, content, tokens, created_at, deleted)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.conversationId}, #{item.role}, #{item.content}, #{item.tokens}, #{item.createdAt}, 0)
+        </foreach>
+    </insert>
+
+</mapper>
